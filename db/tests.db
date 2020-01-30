@@ -45,9 +45,10 @@ AUTH-9340:test:security:authentication:Solaris:Solaris account locking:
 AUTH-9402:test:security:authentication::Query LDAP authentication support:
 AUTH-9406:test:security:authentication::Query LDAP servers in client configuration:
 AUTH-9408:test:security:authentication::Logging of failed login attempts via /etc/login.defs:
+AUTH-9409:test:security:authentication:OpenBSD:Check for doas file:
+AUTH-9410:test:security:authentication:OpenBSD:Check for doas file permissions:
+AUTH-9489:test:security:authentication:DragonFly:Check login shells for passwordless accounts:
 BANN-7113:test:security:banners:FreeBSD:Check COPYRIGHT banner file:
-#BANN-7119:test:security:banners::Check MOTD banner file:
-#BANN-7122:test:security:banners::Check /etc/motd banner file contents:
 BANN-7124:test:security:banners::Check issue banner file:
 BANN-7126:test:security:banners::Check issue banner file contents:
 BANN-7128:test:security:banners::Check issue.net banner file:
@@ -57,13 +58,13 @@ BOOT-5104:test:security:boot_services::Determine service manager:
 BOOT-5106:test:security:boot_services:MacOS:Check EFI boot file on macOS:
 BOOT-5108:test:security:boot_services:Linux:Test Syslinux boot loader:
 BOOT-5116:test:security:boot_services::Check if system is booted in UEFI mode:
+BOOT-5117:test:security:boot_services:Linux:Check for systemd-boot boot loader:
 BOOT-5121:test:security:boot_services::Check for GRUB boot loader presence:
 BOOT-5122:test:security:boot_services::Check for GRUB boot password:
 BOOT-5124:test:security:boot_services:FreeBSD:Check for FreeBSD boot loader presence:
 BOOT-5126:test:security:boot_services:NetBSD:Check for NetBSD boot loader presence:
 BOOT-5139:test:security:boot_services::Check for LILO boot loader presence:
 BOOT-5142:test:security:boot_services::Check SPARC Improved boot loader (SILO):
-#BOOT-5144:test:security:boot_services::Check SPARC Improved boot loader (SILO):
 BOOT-5155:test:security:boot_services::Check for YABOOT boot loader configuration file:
 BOOT-5159:test:security:boot_services:OpenBSD:Check for OpenBSD boot loader presence:
 BOOT-5165:test:security:boot_services:FreeBSD:Check for FreeBSD boot services:
@@ -72,45 +73,36 @@ BOOT-5180:test:security:boot_services:Linux:Check for Linux boot services (Debia
 BOOT-5184:test:security:boot_services:Linux:Check permissions for boot files/scripts:
 BOOT-5202:test:security:boot_services::Check uptime of system:
 BOOT-5260:test:security:boot_services::Check single user mode for systemd:
+BOOT-5261:test:security:boot_services:DragonFly:Check for DragonFly boot loader presence:
+BOOT-5262:test:security:boot_services:OpenBSD:Check for OpenBSD boot daemons:
+BOOT-5263:test:security:boot_services:OpenBSD:Check permissions for boot files/scripts:
 CONT-8004:test:security:containers:Solaris:Query running Solaris zones:
-#CONT-1906:test:security:containers::Query Xen guests:
 CONT-8102:test:security:containers::Checking Docker status and information:
 CONT-8104:test:security:containers::Checking Docker info for any warnings:
 CONT-8106:test:security:containers::Gather basic stats from Docker:
 CONT-8107:test:performance:containers::Check number of unused Docker containers:
 CONT-8108:test:security:containers::Check file permissions for Docker files:
+CORE-1000:test:performance:system_integrity::Check all system binaries:
 CRYP-7902:test:security:crypto::Check expire date of SSL certificates:
+CRYP-7930:test:security:crypto:Linux:Determine if system uses LUKS encryption:
+CRYP-8002:test:security:crypto:Linux:Gather kernel entropy:
+DNS-1600:test:security:dns::Validating that the DNSSEC signatures are checked:
 DBS-1804:test:security:databases::Checking active MySQL process:
-#DBS-1808:test:security:databases::Checking MySQL data directory:
-#DBS-1812:test:security:databases::Checking MySQL data directory permissions:
 DBS-1816:test:security:databases::Checking MySQL root password:
+DBS-1818:test:security:databases::MongoDB status:
+DBS-1820:test:security:databases::Check MongoDB authentication:
 DBS-1826:test:security:databases::Checking active PostgreSQL processes:
+DBS-1828:test:security:databases::PostgreSQL configuration files:
 DBS-1840:test:security:databases::Checking active Oracle processes:
-#DBS-1842:test:security:databases::Checking Oracle home paths:
 DBS-1860:test:security:databases::Checking active DB2 instances:
 DBS-1880:test:security:databases::Checking active Redis processes:
 DBS-1882:test:security:databases::Redis configuration file:
 DBS-1884:test:security:databases::Redis configuration (requirepass):
 DBS-1886:test:security:databases::Redis configuration (CONFIG command renamed):
 DBS-1888:test:security:databases::Redis configuration (bind on localhost):
-FINT-4310:test:security:file_integrity::AFICK availability:
-FINT-4314:test:security:file_integrity::AIDE availability:
-FINT-4315:test:security:file_integrity::Check AIDE configuration file:
-FINT-4318:test:security:file_integrity::Osiris availability:
-FINT-4322:test:security:file_integrity::Samhain availability:
-FINT-4326:test:security:file_integrity::Tripwire availability:
-FINT-4328:test:security:file_integrity::OSSEC syscheck daemon running:
-FINT-4330:test:security:file_integrity::mtree availability:
-FINT-4334:test:security:file_integrity::Check lfd daemon status:
-FINT-4336:test:security:file_integrity::Check lfd configuration status:
-FINT-4338:test:security:file_integrity::osqueryd syscheck daemon running:
-FINT-4402:test:security:file_integrity::Checksums (SHA256 or SHA512):
-FINT-4350:test:security:file_integrity::File integrity software installed:
-FILE-7524:test:security:file_permissions::Perform file permissions check:
 FILE-6310:test:security:filesystems::Checking /tmp, /home and /var directory:
 FILE-6311:test:security:filesystems::Checking LVM volume groups:
 FILE-6312:test:security:filesystems::Checking LVM volumes:
-#FILE-6316:test:security:filesystems:Linux:Checking /etc/fstab:
 FILE-6323:test:security:filesystems:Linux:Checking EXT file systems:
 FILE-6329:test:security:filesystems::Checking FFS/UFS file systems:
 FILE-6330:test:security:filesystems:FreeBSD:Checking ZFS file systems:
@@ -119,12 +111,29 @@ FILE-6336:test:security:filesystems::Checking swap mount options:
 FILE-6344:test:security:filesystems:Linux:Checking proc mount options:
 FILE-6354:test:security:filesystems::Searching for old files in /tmp:
 FILE-6362:test:security:filesystems::Checking /tmp sticky bit:
+FILE-6363:test:security:filesystems::Checking /var/tmp sticky bit:
 FILE-6368:test:security:filesystems:Linux:Checking ACL support on root file system:
 FILE-6372:test:security:filesystems:Linux:Checking / mount options:
-FILE-6374:test:security:filesystems:Linux:Checking /boot mount options:
+FILE-6374:test:security:filesystems:Linux:Linux mount options:
 FILE-6376:test:security:filesystems:Linux:Determine if /var/tmp is bound to /tmp:
 FILE-6410:test:security:filesystems::Checking Locate database:
 FILE-6430:test:security:filesystems::Disable mounting of some filesystems:
+FILE-6439:test:security:filesystems:DragonFly:Checking HAMMER PFS mounts:
+FILE-7524:test:security:file_permissions::Perform file permissions check:
+FINT-4310:test:security:file_integrity::AFICK availability:
+FINT-4314:test:security:file_integrity::AIDE availability:
+FINT-4315:test:security:file_integrity::Check AIDE configuration file:
+FINT-4316:test:security:file_integirty::Presence of AIDE database and size check:
+FINT-4318:test:security:file_integrity::Osiris availability:
+FINT-4322:test:security:file_integrity::Samhain availability:
+FINT-4326:test:security:file_integrity::Tripwire availability:
+FINT-4328:test:security:file_integrity::OSSEC syscheck daemon running:
+FINT-4330:test:security:file_integrity::mtree availability:
+FINT-4334:test:security:file_integrity::Check lfd daemon status:
+FINT-4336:test:security:file_integrity::Check lfd configuration status:
+FINT-4338:test:security:file_integrity::osqueryd syscheck daemon running:
+FINT-4350:test:security:file_integrity::File integrity software installed:
+FINT-4402:test:security:file_integrity::Checksums (SHA256 or SHA512):
 FIRE-4502:test:security:firewalls:Linux:Check iptables kernel module:
 FIRE-4508:test:security:firewalls::Check used policies of iptables chains:
 FIRE-4512:test:security:firewalls::Check iptables for empty ruleset:
@@ -135,14 +144,17 @@ FIRE-4524:test:security:firewalls::Check for CSF presence:
 FIRE-4526:test:security:firewalls:Solaris:Check ipf status:
 FIRE-4530:test:security:firewalls:FreeBSD:Check IPFW status:
 FIRE-4532:test:security:firewalls:MacOS:Check macOS application firewall:
-FIRE-4534:test:security:firewalls:MacOS:Check Little Snitch firewall:
+FIRE-4534:test:security:firewalls:MacOS:Check for outbound firewalls:
 FIRE-4536:test:security:firewalls:Linux:Check nftables status:
 FIRE-4538:test:security:firewalls:Linux:Check nftables basic configuration:
 FIRE-4540:test:security:firewalls:Linux:Test for empty nftables configuration:
+FIRE-4586:test:security:firewalls::Check firewall logging:
 FIRE-4590:test:security:firewalls::Check firewall status:
+FIRE-4594:test:security:firewalls::Check for APF presence:
 HOME-9302:test:security:homedirs::Create list with home directories:
+HOME-9304:test:security:homedirs::Test permissions of user home directories:
+HOME-9306:test:security:homedirs::Test ownership of user home directories:
 HOME-9310:test:security:homedirs::Checking for suspicious shell history files:
-#HOME-9314:test:security:homedirs::Create list with home directories:
 HOME-9350:test:security:homedirs::Collecting information from home directories:
 HRDN-7220:test:security:hardening::Check if one or more compilers are installed:
 HRDN-7222:test:security:hardening::Check compiler permissions:
@@ -150,12 +162,9 @@ HRDN-7230:test:security:hardening::Check for malware scanner:
 HTTP-6622:test:security:webservers::Checking Apache presence:
 HTTP-6624:test:security:webservers::Testing main Apache configuration file:
 HTTP-6626:test:security:webservers::Testing other Apache configuration file:
-#HTTP-6628:test:security:webservers::Testing other Apache configuration file:
-#HTTP-6630:test:security:webservers::Determining all loaded Apache modules:
 HTTP-6632:test:security:webservers::Determining all available Apache modules:
 HTTP-6640:test:security:webservers::Determining existence of specific Apache modules:
 HTTP-6641:test:security:webservers::Determining existence of specific Apache modules:
-#HTTP-6642:test:security:webservers::Determining existence of specific Apache modules:
 HTTP-6643:test:security:webservers::Determining existence of specific Apache modules:
 HTTP-6702:test:security:webservers::Check nginx process:
 HTTP-6704:test:security:webservers::Check nginx configuration file:
@@ -165,14 +174,24 @@ HTTP-6710:test:security:webservers::Check nginx SSL configuration settings:
 HTTP-6712:test:security:webservers::Check nginx access logging:
 HTTP-6714:test:security:webservers::Check for missing error logs in nginx:
 HTTP-6716:test:security:webservers::Check for debug mode on error log in nginx:
-#HTTP-67xx:test:security:webservers::Check nginx virtual hosts:
-#HTTP-67xx:test:security:webservers::Check nginx virtual hosts:
 HTTP-6720:test:security:webservers::Check Nginx log files:
-INSE-8002:test:security:insecure_services::Check for enabled inet daemon:
-INSE-8004:test:security:insecure_services::Check for enabled inet daemon:
-INSE-8006:test:security:insecure_services::Check configuration of inetd when disabled:
+INSE-8000:test:security:insecure_services::Installed inetd package:
+INSE-8002:test:security:insecure_services::Status of inet daemon:
+INSE-8004:test:security:insecure_services::Presence of inetd configuration file:
+INSE-8006:test:security:insecure_services::Check configuration of inetd when it is disabled:
 INSE-8016:test:security:insecure_services::Check for telnet via inetd:
 INSE-8050:test:security:insecure_services:MacOS:Check for insecure services on macOS systems:
+INSE-8100:test:security:insecure_services::Installed xinetd package:
+INSE-8116:test:security:insecure_services::Insecure services enabled via xinetd:
+INSE-8200:test:security:insecure_services::Usage of TCP wrappers:
+INSE-8300:test:security:insecure_services::Presence of rsh client:
+INSE-8302:test:security:insecure_services::Presence of rsh server:
+INSE-8310:test:security:insecure_services::Presence of telnet client:
+INSE-8312:test:security:insecure_services::Presence of telnet server:
+INSE-8314:test:security:insecure_services::Presence of NIS client:
+INSE-8316:test:security:insecure_services::Presence of NIS server:
+INSE-8318:test:security:insecure_services::Presence of TFTP client:
+INSE-8320:test:security:insecure_services::Presence of TFTP server:
 KRNL-5622:test:security:kernel:Linux:Determine Linux default run level:
 KRNL-5677:test:security:kernel:Linux:Check CPU options and support:
 KRNL-5695:test:security:kernel:Linux:Determine Linux kernel version and release number:
@@ -184,8 +203,8 @@ KRNL-5745:test:security:kernel:FreeBSD:Checking FreeBSD loaded kernel modules:
 KRNL-5770:test:security:kernel:Solaris:Checking active kernel modules:
 KRNL-5788:test:security:kernel:Linux:Checking availability new Linux kernel:
 KRNL-5820:test:security:kernel:Linux:Checking core dumps configuration:
-#KRNL-5826:test:security:kernel:Linux:Checking core dumps configuration:
 KRNL-5830:test:security:kernel:Linux:Checking if system is running on the latest installed kernel:
+KRNL-5831:test:security:kernel:DragonFly:Checking DragonFly loaded kernel modules:
 KRNL-6000:test:security:kernel_hardening::Check sysctl key pairs in scan profile:
 LDAP-2219:test:security:ldap::Check running OpenLDAP instance:
 LDAP-2224:test:security:ldap::Check presence slapd.conf:
@@ -193,9 +212,6 @@ LOGG-2130:test:security:logging::Check for running syslog daemon:
 LOGG-2132:test:security:logging::Check for running syslog-ng daemon:
 LOGG-2134:test:security:logging::Checking Syslog-NG configuration file consistency:
 LOGG-2136:test:security:logging::Check for running systemd journal daemon:
-LOGG-2210:test:security:logging::Check for running metalog daemon:
-LOGG-2230:test:security:logging::Check for running RSyslog daemon:
-LOGG-2240:test:security:logging::Check for running RFC 3195 compliant daemon:
 LOGG-2138:test:security:logging:Linux:Checking kernel logger daemon on Linux:
 LOGG-2142:test:security:logging:Linux:Checking minilog daemon:
 LOGG-2146:test:security:logging::Checking logrotate.conf and logrotate.d:
@@ -210,15 +226,23 @@ LOGG-2170:test:security:logging::Checking log paths:
 LOGG-2180:test:security:logging::Checking open log files:
 LOGG-2190:test:security:logging::Checking for deleted files in use:
 LOGG-2192:test:security:logging::Checking for opened log files that are empty:
+LOGG-2210:test:security:logging::Check for running metalog daemon:
+LOGG-2230:test:security:logging::Check for running RSyslog daemon:
+LOGG-2240:test:security:logging::Check for running RFC 3195 compliant daemon:
 MACF-6204:test:security:mac_frameworks::Check AppArmor presence:
 MACF-6208:test:security:mac_frameworks::Check if AppArmor is enabled:
 MACF-6232:test:security:mac_frameworks::Check SELINUX presence:
 MACF-6234:test:security:mac_frameworks::Check SELINUX status:
+MACF-6240:test:security:mac_frameworks::Detection of TOMOYO binary:
+MACF-6242:test:security:mac_frameworks::Status of TOMOYO MAC framework:
 MACF-6290:test:security:mac_frameworks::Check for implemented MAC framework:
 MAIL-8802:test:security:mail_messaging::Check Exim status:
+MAIL-8804:test:security:mail_messaging::Exim configuration:
 MAIL-8814:test:security:mail_messaging::Check postfix process status:
 MAIL-8816:test:security:mail_messaging::Check Postfix configuration:
-MAIL-8818:test:security:mail_messaging::banner:
+MAIL-8817:test:security:mail_messaging::Check Postfix configuration errors:
+MAIL-8818:test:security:mail_messaging::Postfix banner:
+MAIL-8820:test:security:mail_messaging::Postfix configuration:
 MAIL-8838:test:security:mail_messaging::Check dovecot process:
 MAIL-8860:test:security:mail_messaging::Check Qmail status:
 MAIL-8880:test:security:mail_messaging::Check Sendmail status:
@@ -231,10 +255,6 @@ MALW-3282:test:security:malware::Check for clamscan:
 MALW-3284:test:security:malware::Check for clamd:
 MALW-3286:test:security:malware::Check for freshclam:
 MALW-3288:test:security:malware::Check for ClamXav:
-PROC-3602:test:security:memory_processes:Linux:Checking /proc/meminfo for memory details:
-PROC-3604:test:security:memory_processes:Solaris:Query prtconf for memory details:
-PROC-3612:test:security:memory_processes::Check dead or zombie processes:
-PROC-3614:test:security:memory_processes::Check heavy IO waiting based processes:
 NAME-4016:test:security:nameservices::Check /etc/resolv.conf default domain:
 NAME-4018:test:security:nameservices::Check /etc/resolv.conf search domains:
 NAME-4020:test:security:nameservices::Check non default options:
@@ -247,14 +267,9 @@ NAME-4036:test:security:nameservices::Check Unbound configuration file:
 NAME-4202:test:security:nameservices::Check BIND status:
 NAME-4204:test:security:nameservices::Search BIND configuration file:
 NAME-4206:test:security:nameservices::Check BIND configuration consistency:
-#NAME-4050:test:security:nameservices::Check nscd status:
 NAME-4210:test:security:nameservices::Check DNS banner:
-#NAME-4212:test:security:nameservices::Check version setting in configuration:
-#NAME-4220:test:security:nameservices::Check zone transfer:
-#NAME-4222:test:security:nameservices::Check zone transfer:
 NAME-4230:test:security:nameservices::Check PowerDNS status:
 NAME-4232:test:security:nameservices::Search PowerDNS configuration file:
-#NAME-4234:test:security:nameservices::Check PowerDNS configuration consistency:
 NAME-4236:test:security:nameservices::Check PowerDNS backends:
 NAME-4238:test:security:nameservices::Check PowerDNS authoritive status:
 NAME-4304:test:security:nameservices::Check NIS ypbind status:
@@ -276,6 +291,7 @@ NETW-3015:test:security:networking:Linux:Checking promiscuous interfaces (Linux)
 NETW-3028:test:security:networking::Checking connections in WAIT state:
 NETW-3030:test:security:networking::Checking DHCP client status:
 NETW-3032:test:security:networking:Linux:Checking for ARP monitoring software:
+NETW-3200:test:security:networking::Determine available network protocols:
 PHP-2211:test:security:php::Check php.ini presence:
 PHP-2320:test:security:php::Check PHP disabled functions:
 PHP-2368:test:security:php::Check PHP register_globals option:
@@ -283,6 +299,7 @@ PHP-2372:test:security:php::Check PHP expose_php option:
 PHP-2374:test:security:php::Check PHP enable_dl option:
 PHP-2376:test:security:php::Check PHP allow_url_fopen option:
 PHP-2378:test:security:php::Check PHP allow_url_include option:
+PHP-2379:test:security:php::Check PHP suhosin extension status:
 PKGS-7301:test:security:ports_packages::Query NetBSD pkg:
 PKGS-7302:test:security:ports_packages::Query FreeBSD/NetBSD pkg_info:
 PKGS-7303:test:security:ports_packages::Query brew package manager:
@@ -296,6 +313,8 @@ PKGS-7320:test:security:ports_packages:Linux:Check presence of arch-audit for Ar
 PKGS-7322:test:security:ports_packages:Linux:Discover vulnerable packages on Arch Linux:
 PKGS-7328:test:security:ports_packages::Querying Zypper for installed packages:
 PKGS-7330:test:security:ports_packages::Querying Zypper for vulnerable packages:
+PKGS-7332:test:security:ports_packages::Detection of macOS ports and packages:
+PKGS-7334:test:security:ports_packages::Detection of available updates for macOS ports:
 PKGS-7345:test:security:ports_packages::Querying dpkg:
 PKGS-7346:test:security:ports_packages::Search unpurged packages on system:
 PKGS-7348:test:security:ports_packages:FreeBSD:Check for old distfiles:
@@ -319,16 +338,21 @@ PKGS-7393:test:security:ports_packages::Check for Gentoo vulnerable packages:
 PKGS-7394:test:security:ports_packages:Linux:Check for Ubuntu updates:
 PKGS-7398:test:security:ports_packages::Check for package audit tool:
 PKGS-7410:test:security:ports_packages::Count installed kernel packages:
+PKGS-7420:test:security:ports_packages::Detect toolkit to automatically download and apply upgrades:
 PRNT-2302:test:security:printers_spools:FreeBSD:Check for printcap consistency:
 PRNT-2304:test:security:printers_spools::Check cupsd status:
 PRNT-2306:test:security:printers_spools::Check CUPSd configuration file:
 PRNT-2307:test:security:printers_spools::Check CUPSd configuration file permissions:
 PRNT-2308:test:security:printers_spools::Check CUPSd network configuration:
 PRNT-2314:test:security:printers_spools::Check lpd status:
-#PRNT-23xx:test::printers_spools:Check cupsd address configuration:security:
 PRNT-2316:test:security:printers_spools:AIX:Checking /etc/qconfig file:
 PRNT-2418:test:security:printers_spools:AIX:Checking qdaemon printer spooler status:
 PRNT-2420:test:security:printers_spools:AIX:Checking old print jobs:
+PROC-3602:test:security:memory_processes:Linux:Checking /proc/meminfo for memory details:
+PROC-3604:test:security:memory_processes:Solaris:Query prtconf for memory details:
+PROC-3612:test:security:memory_processes::Check dead or zombie processes:
+PROC-3614:test:security:memory_processes::Check heavy IO waiting based processes:
+PROC-3802:test:security:memory_processes::Check presence of prelink tooling:
 RBAC-6272:test:security:mac_frameworks::Check grsecurity presence:
 SCHD-7702:test:security:scheduling::Check status of cron daemon:
 SCHD-7704:test:security:scheduling::Check crontab/cronjobs:
@@ -339,12 +363,10 @@ SHLL-6202:test:security:shells:FreeBSD:Check console TTYs:
 SHLL-6211:test:security:shells::Checking available and valid shells:
 SHLL-6220:test:security:shells::Checking available and valid shells:
 SHLL-6230:test:security:shells::Perform umask check for shell configurations:
-SHLL-6290:test:security:shells::Perform Shellshock vulnerability tests:
+SINT-7010:test:security:system_integrity:MacOS:System Integrity Status:
 SNMP-3302:test:security:snmp::Check for running SNMP daemon:
 SNMP-3304:test:security:snmp::Check SNMP daemon file location:
 SNMP-3306:test:security:snmp::Check SNMP communities:
-#SOL-xxxx:test:security:solaris::Check for running SSH daemon:
-#SOL-xxxx:test:security:solaris::Check for running SSH daemon:
 SQD-3602:test:security:squid::Check for running Squid daemon:
 SQD-3604:test:security:squid::Check Squid daemon file location:
 SQD-3606:test:security:squid::Check Squid version:
@@ -355,19 +377,17 @@ SQD-3616:test:security:squid::Check external Squid authentication:
 SQD-3620:test:security:squid::Check Squid access control lists:
 SQD-3624:test:security:squid::Check Squid safe ports:
 SQD-3630:test:security:squid::Check Squid reply_body_max_size option:
-SQD-3680:test:security:squid::Check Squid version suppresion:
+SQD-3680:test:security:squid::Check Squid version suppression:
 SSH-7402:test:security:ssh::Check for running SSH daemon:
 SSH-7404:test:security:ssh::Check SSH daemon file location:
+SSH-7406:test:security:ssh::Detection of OpenSSH server version:
 SSH-7408:test:security:ssh::Check SSH specific defined options:
 SSH-7440:test:security:ssh::AllowUsers and AllowGroups:
-STRG-1840:test:security:storage:Linux:Check if USB storage is disabled:
-STRG-1842:test:security:storage:Linux:Check USB authorizations:
 STRG-1846:test:security:storage:Linux:Check if firewire storage is disabled:
 STRG-1902:test:security:storage_nfs::Check rpcinfo registered programs:
 STRG-1904:test:security:storage_nfs::Check nfs rpc:
 STRG-1906:test:security:storage_nfs::Check nfs rpc:
 STRG-1920:test:security:storage_nfs::Checking NFS daemon:
-#STRG-1924:test:security:storage_nfs::Checking NFS daemon:
 STRG-1926:test:security:storage_nfs::Checking NFS exports:
 STRG-1928:test:security:storage_nfs::Checking empty /etc/exports:
 STRG-1930:test:security:storage_nfs::Check client access to nfs share:
@@ -380,12 +400,17 @@ TIME-3124:test:security:time::Check selected time source:
 TIME-3128:test:security:time::Check preffered time source:
 TIME-3132:test:security:time::Check NTP falsetickers:
 TIME-3136:test:security:time:Linux:Check NTP protocol version:
-#TIME-3146:test:security:time:Linux:Check /etc/default/ntpdate:
+TIME-3148:test:performance:time:Linux:Check TZ variable:
 TIME-3160:test:security:time:Linux:Check empty NTP step-tickers:
 TIME-3170:test:security:time::Check configuration files:
 TOOL-5002:test:security:tooling::Checking for automation tools:
 TOOL-5102:test:security:tooling::Check for presence of Fail2ban:
 TOOL-5104:test:security:tooling::Enabled tests for Fail2ban:
+TOOL-5120:test:security:tooling::Presence of Snort IDS:
+TOOL-5122:test:security:tooling::Snort IDS configuration file:
+TOOL-5160:test:security:tooling::Check for active OSSEC daemon:
 TOOL-5190:test:security:tooling::Check presence of available IDS/IPS tooling:
-#VIRT-1920:test::virtualization:Checking VMware guest status:security:
+USB-1000:test:security:storage:Linux:Check if USB storage is disabled:
+USB-2000:test:security:storage:Linux:Check USB authorizations:
+USB-3000:test:security:storage:Linux:Check for presence of USBGuard:
 # EOF

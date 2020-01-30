@@ -6,7 +6,7 @@
 # ------------------
 #
 # Copyright 2007-2013, Michael Boelen
-# Copyright 2013-2016, CISOfy
+# Copyright 2007-2019, CISOfy
 #
 # Website  : https://cisofy.com
 # Blog     : http://linux-audit.com
@@ -35,22 +35,22 @@
 #
     # Test        : CONT-8004
     # Description : Query running Solaris zones
-    if [ -x /usr/sbin/zoneadm ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
+    if [ -x ${ROOTDIR}usr/sbin/zoneadm ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     Register --test-no CONT-8004 --os Solaris --weight L --network NO --category security --description "Query running Solaris zones"
     if [ ${SKIPTEST} -eq 0 ]; then
         LogText "Test: query zoneadm to list all running zones"
-        FIND=$(/usr/sbin/zoneadm list -p | ${AWKBINARY} -F: '{ if ($2!="global") print $0 }')
-        if [ ! -z "${FIND}" ]; then
-            N=0
-            for I in ${FIND}; do
-                N=$((N + 1))
-                ZONEID=$(echo ${I} | ${CUTBINARY} -d ':' -f1)
-                ZONENAME=$(echo ${I} | ${CUTBINARY} -d ':' -f2)
+        FIND=$(${ROOTDIR}usr/sbin/zoneadm list -p | ${AWKBINARY} -F: '{ if ($2!="global") print $0 }')
+        if [ -n "${FIND}" ]; then
+            COUNT=0
+            for ITEM in ${FIND}; do
+                COUNT=$((COUNT + 1))
+                ZONEID=$(echo ${ITEM} | ${CUTBINARY} -d ':' -f1)
+                ZONENAME=$(echo ${ITEM} | ${CUTBINARY} -d ':' -f2)
                 LogText "Result: found zone ${ZONENAME} (running)"
                 Report "solaris_running_zone[]=${ZONENAME} [id:${ZONEID}]"
             done
-            LogText "Result: total of ${N} running zones"
-            Display --indent 2 --text "- Checking Solaris Zones" --result "FOUND ${N} zones" --color GREEN
+            LogText "Result: total of ${COUNT} running zones"
+            Display --indent 2 --text "- Checking Solaris Zones" --result "FOUND ${COUNT} zones" --color GREEN
         else
             LogText "Result: no running zones found"
             Display --indent 2 --text "- Checking Solaris Zones" --result "${STATUS_NONE}" --color WHITE
@@ -59,16 +59,18 @@
 #
 #################################################################################
 #
-    # Test        : CONT-1906
+    # Do you have Xen running? Help us testing this test and submit a pull request on GitHub
+
+    # Test        : CONT-1906 TODO
     # Description : Query running Xen zones
     #if [ -x /usr/bin/xm ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     #Register --test-no CONT-1906 --weight L --network NO --category security --description "Query Xen guests"
     #if [ ${SKIPTEST} -eq 0 ]; then
         # Show Xen guests
-        #FIND=`xm list | ${AWKBINARY} '$1 != "Name|Domain-0" {print $1","$2}'`
+        #FIND=$(xm list | ${AWKBINARY} '$1 != "Name|Domain-0" {print $1","$2}')
         #for I in ${FIND}; do
-            #XENGUESTNAME=`echo ${I} | ${CUTBINARY} -d ':' -f1`
-            #XENGUESTID=`echo ${I} | ${CUTBINARY} -d ':' -f2`
+            #XENGUESTNAME=$(echo ${I} | ${CUTBINARY} -d ':' -f1)
+            #XENGUESTID=$(echo ${I} | ${CUTBINARY} -d ':' -f2)
             #LogText "Result: found Xen guest ${XENGUESTNAME} (ID: ${XENGUESTID})"
         #done
     #fi
@@ -79,8 +81,7 @@
     # Description : Checking Docker daemon status and basic information for later tests
     Register --test-no CONT-8102 --weight L --network NO --category security --description "Checking Docker status and information"
     if [ ${SKIPTEST} -eq 0 ]; then
-        IsRunning "docker -d"
-        if [ ${RUNNING} -eq 1 ]; then
+        if IsRunning "dockerd"; then
             LogText "Result: found Docker daemon running"
             Report "docker_daemon_running=1"
             DOCKER_DAEMON_RUNNING=1
@@ -95,7 +96,7 @@
     # Test        : CONT-8104
     # Description : Checking Docker info for any warnings
     # Notes       : Hardening points are awarded, as usually warnings are the result of missing controls to restrict boundaries like memory
-    if [ ! -z "${DOCKERBINARY}" ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
+    if HasData "${DOCKERBINARY}"; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     Register --test-no CONT-8104 --preqs-met ${PREQS_MET} --weight L --network NO --category security --description "Checking Docker info for any warnings"
     if [ ${SKIPTEST} -eq 0 ]; then
         COUNT=0
@@ -129,15 +130,15 @@
     # Test        : CONT-8106
     # Description : Checking Docker containers (basic stats)
     # Notes       : Hardening points are awarded, if there aren't a lot of stopped containers
-    if [ ! -z "${DOCKERBINARY}" -a ${RUN_DOCKER_TESTS} -eq 1 ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
+    if [ -n "${DOCKERBINARY}" -a ${RUN_DOCKER_TESTS} -eq 1 ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     Register --test-no CONT-8106 --preqs-met ${PREQS_MET} --weight L --network NO --category security --description "Gather basic stats from Docker"
     if [ ${SKIPTEST} -eq 0 ]; then
         Display --indent 6 --text "- Containers"
 
         # Check total of containers
         LogText "Test: checking total amount of Docker containers"
-        DOCKER_CONTAINERS_TOTAL=$(${DOCKERBINARY} info 2> /dev/null | ${GREPBINARY} "^Containers: " | ${AWKBINARY} '{ print $2 }')
-        if [ "${DOCKER_CONTAINERS_TOTAL}" = "" ]; then
+        DOCKER_CONTAINERS_TOTAL=$(${DOCKERBINARY} info 2> /dev/null | ${EGREPBINARY} "^[ \t]?Containers: " | ${AWKBINARY} '{ print $2 }')
+        if [ -z "${DOCKER_CONTAINERS_TOTAL}" ]; then
             DOCKER_CONTAINERS_TOTAL=0
         fi
 
@@ -169,7 +170,7 @@
     # Test        : CONT-8107
     # Description : Checking Docker number of unused containers
     # Notes       : Hardening points are awarded, if there aren't a lot of stopped containers
-    if [ ! "${DOCKERBINARY}" = "" -a ${RUN_DOCKER_TESTS} -eq 1 ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
+    if [ -n "${DOCKERBINARY}" -a ${RUN_DOCKER_TESTS} -eq 1 ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     Register --test-no CONT-8107 --preqs-met ${PREQS_MET} --weight L --network NO --category performance --description "Check number of Docker containers"
     if [ ${SKIPTEST} -eq 0 ]; then
         # Check if there aren't too many unused containers on the system
@@ -192,10 +193,10 @@
     # Test        : CONT-8108
     # Description : Checking Docker file permissions
     # Notes       : /var/run/docker.sock - Usually root as owner, docker as group - should not be world writable
-    if [ ! "${DOCKERBINARY}" = "" -a ${RUN_DOCKER_TESTS} -eq 1 ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
+    if [ -n "${DOCKERBINARY}" -a ${RUN_DOCKER_TESTS} -eq 1 ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     Register --test-no CONT-8108 --preqs-met ${PREQS_MET} --weight L --network NO --category security --description "Check file permissions for Docker files"
     if [ ${SKIPTEST} -eq 0 ]; then
-        NOT_WORLD_WRITABLE="/var/run/docker.sock"
+        NOT_WORLD_WRITABLE="${ROOTDIR}var/run/docker.sock"
         for FILE in ${NOT_WORLD_WRITABLE}; do
             LogText "Test: Check ${FILE}"
             if [ -f ${FILE} ]; then
@@ -225,4 +226,4 @@ WaitForKeyPress
 
 #
 #================================================================================
-# Lynis - Copyright 2007-2016, CISOfy - https://cisofy.com
+# Lynis - Copyright 2007-2019, CISOfy - https://cisofy.com

@@ -6,7 +6,7 @@
 # ------------------
 #
 # Copyright 2007-2013, Michael Boelen
-# Copyright 2013-2016, CISOfy
+# Copyright 2007-2019, CISOfy
 #
 # Website  : https://cisofy.com
 # Blog     : http://linux-audit.com
@@ -46,10 +46,21 @@
                 OS_VERSION_NAME="unknown"
                 OS_FULLNAME="macOS (unknown version)"
                 case ${OS_VERSION} in
+                    10.0 | 10.0.[0-9]*) OS_FULLNAME="Mac OS X 10.0 (Cheetah)" ;;
+                    10.1 | 10.1.[0-9]*) OS_FULLNAME="Mac OS X 10.1 (Puma)" ;;
+                    10.2 | 10.2.[0-9]*) OS_FULLNAME="Mac OS X 10.2 (Jaguar)" ;;
+                    10.3 | 10.3.[0-9]*) OS_FULLNAME="Mac OS X 10.3 (Panther)" ;;
+                    10.4 | 10.4.[0-9]*) OS_FULLNAME="Mac OS X 10.4 (Tiger)" ;;
+                    10.5 | 10.5.[0-9]*) OS_FULLNAME="Mac OS X 10.5 (Leopard)" ;;
+                    10.6 | 10.6.[0-9]*) OS_FULLNAME="Mac OS X 10.6 (Snow Leopard)" ;;
+                    10.7 | 10.7.[0-9]*) OS_FULLNAME="Mac OS X 10.7 (Lion)" ;;
+                    10.8 | 10.8.[0-9]*) OS_FULLNAME="Mac OS X 10.8 (Mountain Lion)" ;;
                     10.9 | 10.9.[0-9]*) OS_FULLNAME="Mac OS X 10.9 (Mavericks)" ;;
                     10.10 | 10.10.[0-9]*) OS_FULLNAME="Mac OS X 10.10 (Yosemite)" ;;
                     10.11 | 10.11.[0-9]*) OS_FULLNAME="Mac OS X 10.11 (El Capitan)" ;;
                     10.12 | 10.12.[0-9]*) OS_FULLNAME="macOS Sierra (${OS_VERSION})" ;;
+                    10.13 | 10.13.[0-9]*) OS_FULLNAME="macOS High Sierra (${OS_VERSION})" ;;
+                    10.14 | 10.14.[0-9]*) OS_FULLNAME="macOS Mojave (${OS_VERSION})" ;;
                     *) echo "Unknown macOS version. Do you know what version it is? Create an issue at ${PROGRAM_SOURCE}" ;;
                 esac
             else
@@ -108,6 +119,7 @@
             HARDWARE=$(uname -m)
             FIND_BINARIES="whereis -b"
             SYSCTL_READKEY=""
+            LOGDIR="/var/adm/syslog"
         ;;
 
         # Linux
@@ -126,37 +138,107 @@
 
             # Generic
             if [ -e /etc/os-release ]; then
-                OS_ID=$(grep "^ID=" /etc/os-release | awk -F= '{print $2}')
-                if [ ! -z "${OS_ID}" ]; then
+                OS_ID=$(grep "^ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                if [ -n "${OS_ID}" ]; then
                     case ${OS_ID} in
+                        "amzn")
+                            LINUX_VERSION="Amazon Linux"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="Amazon Linux"
+                            OS_REDHAT_OR_CLONE=1
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                        ;;
                         "arch")
                             LINUX_VERSION="Arch Linux"
                             OS_FULLNAME="Arch Linux"
-                            OS_VERSION="Unknown"
+                            OS_VERSION="Rolling release"
+                        ;;
+                        "centos")
+                            LINUX_VERSION="CentOS"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="CentOS Linux"
+                            OS_REDHAT_OR_CLONE=1
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                        ;;
+                        "clear-linux-os")
+                            LINUX_VERSION="Clear Linux OS"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="Clear Linux OS"
+                            OS_REDHAT_OR_CLONE=1
+                            OS_VERSION="Rolling release"
                         ;;
                         "coreos")
                             LINUX_VERSION="CoreOS"
                             OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
-                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
                             OS_NAME="CoreOS Linux"
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                        ;;
+                        "debian")
+                            LINUX_VERSION="Debian"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION_FULL=$(grep "^VERSION=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="Debian"
+                        ;;
+                        "manjaro")
+                            LINUX_VERSION="Manjaro"
+                            OS_FULLNAME="Manjaro Linux"
+                            OS_NAME="Manjaro"
+                            OS_VERSION="Rolling release"
+                        ;;
+                        "opensuse-tumbleweed")
+                            LINUX_VERSION="openSUSE Tumbleweed"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            # It's rolling release but has a snapshot version (the date of the snapshot)
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="openSUSE"
+                        ;;
+                        "opensuse-leap")
+                            LINUX_VERSION="openSUSE Leap"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="openSUSE"
                         ;;
                         "ubuntu")
                             LINUX_VERSION="Ubuntu"
                             OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
                             OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
-                            OS_NAME="Ubuntu Linux"
+                            OS_VERSION_FULL=$(grep "^VERSION=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="Ubuntu"
+                        ;;
+                        "raspbian")
+                            LINUX_VERSION="Raspbian"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION_FULL=$(grep "^VERSION=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="Raspbian"
+                        ;;
+                        "rhel")
+                            LINUX_VERSION="RHEL"
+                            OS_NAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION_FULL=$(grep "^VERSION=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_FULLNAME="${OS_NAME} ${OS_VERSION_FULL}"
+                            OS_REDHAT_OR_CLONE=1
+                        ;;
+                        "slackware")
+                            LINUX_VERSION="Slackware"
+                            OS_FULLNAME=$(grep "^PRETTY_NAME=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_NAME="Slackware Linux"
+                            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
+                            OS_VERSION_FULL=$(grep "^VERSION=" /etc/os-release | awk -F= '{print $2}' | tr -d '"')
                         ;;
                         *)
-                            Debug "Unknown OS found in /etc/os-release. Do you know what it is? Create an issue at ${PROGRAM_SOURCE}"
+                            ReportException "OS Detection" "Unknown OS found in /etc/os-release"
                         ;;
                     esac
                 fi
             fi
 
             # Amazon
-            if [ -e "/etc/system-release" ]; then
-                FIND=$(grep "Amazon" /etc/system-release)
-                if [ ! "${FIND}" = "" ]; then
+            if [ -z "${LINUX_VERSION}" -a -e "/etc/system-release" ]; then
+                FIND=$(grep "^Amazon" /etc/system-release)
+                if [ -n "${FIND}" ]; then
                     OS_REDHAT_OR_CLONE=1
                     OS_FULLNAME=$(grep "^Amazon" /etc/system-release)
                     OS_VERSION=$(grep "^Amazon" /etc/system-release | awk '{ if ($4=="release") { print $5 } }')
@@ -180,6 +262,7 @@
 
             # Cobalt
             if [ -e "/etc/cobalt-release" ]; then OS_FULLNAME=$(cat /etc/cobalt-release); fi
+
             # CPUBuilders Linux
             if [ -e "/etc/cpub-release" ]; then OS_FULLNAME=$(cat /etc/cpub-release); fi
 
@@ -210,6 +293,16 @@
                 # Ubuntu test (optional) $(grep "[Uu]buntu" /proc/version)
             fi
 
+            # Override for Linux Mint, as that is initially detected as Debian or Ubuntu
+            if [ -x /usr/bin/lsb_release ]; then
+                FIND=$(lsb_release --id | awk -F: '{ print $2 }' | awk '{ print $1 }')
+                if [ "${FIND}" = "LinuxMint" ]; then
+                    LINUX_VERSION="Linux Mint"
+                    OS_VERSION=$(lsb_release --release | awk '{ print $2 }')
+                    OS_FULLNAME="Linux Mint ${OS_VERSION}"
+                fi
+            fi
+
             # E-smith
             if [ -e "/etc/e-smith-release" ]; then OS_FULLNAME=$(cat /etc/e-smith-release); fi
 
@@ -217,12 +310,11 @@
             if [ -e "/etc/gentoo-release" ]; then LINUX_VERSION="Gentoo"; OS_FULLNAME=$(cat /etc/gentoo-release); fi
 
             # Red Hat and others
-            if [ -e "/etc/redhat-release" ]; then
+            if [ -z "${LINUX_VERSION}" -a -e "/etc/redhat-release" ]; then
                 OS_REDHAT_OR_CLONE=1
 
                 # CentOS
-                FIND=$(grep "CentOS" /etc/redhat-release)
-                if [ ! "${FIND}" = "" ]; then
+                if grep "CentOS" /etc/redhat-release; then
                     OS_FULLNAME=$(grep "CentOS" /etc/redhat-release)
                     LINUX_VERSION="CentOS"
                     OS_VERSION="${OS_FULLNAME}"
@@ -302,21 +394,21 @@
 
             # PCLinuxOS
             if [ -f /etc/pclinuxos-release ]; then
-              FIND=$(grep "^PCLinuxOS" /etc/pclinuxos-release)
+                FIND=$(grep "^PCLinuxOS" /etc/pclinuxos-release)
                 if [ ! "${FIND}" = "" ]; then
-                  OS_FULLNAME="PCLinuxOS Linux"
-                  LINUX_VERSION="PCLinuxOS"
-                  OS_VERSION=$(grep "^PCLinuxOS" /etc/pclinuxos-release | awk '{ if ($2=="release") { print $3 } }')
+                    OS_FULLNAME="PCLinuxOS Linux"
+                    LINUX_VERSION="PCLinuxOS"
+                    OS_VERSION=$(grep "^PCLinuxOS" /etc/pclinuxos-release | awk '{ if ($2=="release") { print $3 } }')
                 fi
             fi
 
             # Sabayon Linux
             if [ -f /etc/sabayon-edition ]; then
-              FIND=$(grep "Sabayon Linux" /etc/sabayon-edition)
+                FIND=$(grep "Sabayon Linux" /etc/sabayon-edition)
                 if [ ! "${FIND}" = "" ]; then
-                  OS_FULLNAME="Sabayon Linux"
-                  LINUX_VERSION="Sabayon"
-                  OS_VERSION=$(awk '{ print $3 }' /etc/sabayon-edition)
+                    OS_FULLNAME="Sabayon Linux"
+                    LINUX_VERSION="Sabayon"
+                    OS_VERSION=$(awk '{ print $3 }' /etc/sabayon-edition)
                 fi
             fi
 
@@ -412,7 +504,7 @@
                 OS_FULLNAME=$(cat /etc/vmware-release)
                 OS_VERSION=$(uname -r)
             fi
-            HAS_VMWARE_UTIL=$(which vmware 2> /dev/null)
+            HAS_VMWARE_UTIL=$(which vmware 2> /dev/null | grep -v "no [^ ]* in ")
             if [ ! "${HAS_VMWARE_UTIL}" = "" ]; then
                 IS_VMWARE_ESXI=$(vmware -vl | grep VMware ESXi)
                 if [ ! "${IS_VMWARE_ESXI}" = "" ]; then
@@ -437,10 +529,10 @@
     ECHONB=""
 
     case ${OS} in
-        "AIX")                           ECHOCMD="echo" ;;
+        "AIX")                           ECHOCMD="echo"; ECHONB="printf" ;;
         "DragonFly"|"FreeBSD"|"NetBSD")  ECHOCMD="echo -e"; ECHONB="echo -n" ;;
         "macOS" | "Mac OS X")                         ECHOCMD="echo"; ECHONB="/bin/echo -n" ;;
-        "Solaris")                       ECHOCMD="echo" ;;
+        "Solaris")                       ECHOCMD="echo" ; test -f /usr/ucb/echo && ECHONB="/usr/ucb/echo -n" ;;
         "Linux")
             # Check if dash is used (Debian/Ubuntu)
             DEFAULT_SHELL=$(ls -l /bin/sh | awk -F'>' '{print $2}')
@@ -461,6 +553,36 @@
             fi
         fi
     fi
+
+    # Specific checks for hardware
+
+    # Detect if we are using a QNAP NAS
+    if [ -d /share/CACHEDEV1_DATA/.qpkg ]; then
+        QNAP_DEVICE=1
+    fi
+
+    # Check if this OS is end-of-life
+    EOL=255
+    EOL_DATE=""
+    EOL_TIMESTAMP=0
+    if [ -n "${OS_VERSION}" ]; then
+        if [ -f "${DBDIR}/software-eol.db" ]; then
+            FIND="${OS_FULLNAME}"
+            EOL_TIMESTAMP=$(awk -v value="${FIND}" -F: '{if ($1=="os" && value ~ $2){print $4}}' ${DBDIR}/software-eol.db | head -n 1)
+            if [ -n "${EOL_TIMESTAMP}" ]; then
+                EOL_DATE=$(awk -v value="${FIND}" -F: '{if ($1=="os" && value ~ $2){print $3}}' ${DBDIR}/software-eol.db | head -n 1)
+                NOW=$(date "+%s")
+                if [ -n "${NOW}" ]; then
+                    if [ ${NOW} -gt ${EOL_TIMESTAMP} ]; then
+                        EOL=1
+                    else
+                        EOL=0
+                    fi
+                fi
+            fi
+        fi
+    fi
+
 
 #================================================================================
 # Lynis - Security Auditing and System Hardening for Linux and UNIX - https://cisofy.com

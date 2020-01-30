@@ -6,7 +6,7 @@
 # ------------------
 #
 # Copyright 2007-2013, Michael Boelen
-# Copyright 2013-2016, CISOfy
+# Copyright 2007-2019, CISOfy
 #
 # Website  : https://cisofy.com
 # Blog     : http://linux-audit.com
@@ -49,8 +49,8 @@
     # Enable screen output again
     QUIET=0
 
-    SCP_BINARY=`which scp 2> /dev/null`
-    SSH_BINARY=`which ssh 2> /dev/null`
+    SCP_BINARY=$(which scp 2> /dev/null | grep -v "no [^ ]* in ")
+    SSH_BINARY=$(which ssh 2> /dev/null | grep -v "no [^ ]* in ")
     if [ "${SCP_BINARY}" = "" ]; then echo "Could not find scp binary"; ExitFatal; fi
     if [ "${SSH_BINARY}" = "" ]; then echo "Could not find ssh binary"; ExitFatal; fi
 
@@ -70,14 +70,14 @@
     #if [ $? -gt 1 ]; then echo "Could not perform remote audit"; ExitFatal; fi
 
     echo "  ${BLUE}* ${WHITE}Step 4${NORMAL}: ${CYAN}Clean up directory${NORMAL}"
-    printf "%s\n\n" "    ssh ${REMOTE_TARGET} rm -rf ~/tmp-lynis"
+    printf "%s\n\n" "    ssh ${REMOTE_TARGET} \"rm -rf ~/tmp-lynis\""
 
     echo "  ${BLUE}* ${WHITE}Step 5${NORMAL}: ${CYAN}Retrieve log and report${NORMAL}"
     printf "%s\n" "    scp -q ${REMOTE_TARGET}:/tmp/lynis.log ./files/${REMOTE_TARGET}-lynis.log"
     printf "%s\n\n" "    scp -q ${REMOTE_TARGET}:/tmp/lynis-report.dat ./files/${REMOTE_TARGET}-lynis-report.dat"
 
     echo "  ${BLUE}* ${WHITE}Step 6${NORMAL}: ${CYAN}Clean up tmp files (when using non-privileged account)${NORMAL}"
-    printf "%s\n\n" "    ssh ${REMOTE_TARGET} rm /tmp/lynis.log /tmp/lynis-report.dat"
+    printf "%s\n\n" "    ssh ${REMOTE_TARGET} \"rm /tmp/lynis.log /tmp/lynis-report.dat\""
 
     # No more Lynis output
     QUIET=1

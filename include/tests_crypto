@@ -6,7 +6,7 @@
 # ------------------
 #
 # Copyright 2007-2013, Michael Boelen
-# Copyright 2013-2016, CISOfy
+# Copyright 2007-2019, CISOfy
 #
 # Website  : https://cisofy.com
 # Blog     : http://linux-audit.com
@@ -28,64 +28,168 @@
 #
     # Test        : CRYP-7902
     # Description : check for expired SSL certificates
-    if [ ! -z "${OPENSSLBINARY}" ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
+    if [ -n "${OPENSSLBINARY}" ]; then PREQS_MET="YES"; else PREQS_MET="NO"; fi
     Register --test-no CRYP-7902 --preqs-met ${PREQS_MET} --weight L --network NO --category security --description "Check expire date of SSL certificates"
     if [ ${SKIPTEST} -eq 0 ]; then
+        COUNT_EXPIRED=0
         COUNT_TOTAL=0
         FOUNDPROBLEM=0
-        sSSL_PATHS=$(echo ${SSL_CERTIFICATE_PATHS} | ${SEDBINARY} 's/:/ /g')
-        sSSL_PATHS=$(echo ${sSSL_PATHS} | ${SEDBINARY} 's/^ //' | ${TRBINARY} " " "\n" | ${SORTBINARY} | uniq | ${TRBINARY} "\n" " ")
+        SKIP=0
+        sSSL_PATHS=$(echo ${SSL_CERTIFICATE_PATHS} | ${SEDBINARY} 's/:space:/__space__/g' | ${SEDBINARY} 's/:/ /g')
+        sSSL_PATHS=$(echo ${sSSL_PATHS} | ${SEDBINARY} 's/^ //' | ${SORTBINARY} -u)
         LogText "Paths to scan: ${sSSL_PATHS}"
+
+        IGNORE_PATHS_PRINT=$(echo ${SSL_CERTIFICATE_PATHS_TO_IGNORE} | ${SEDBINARY} 's/:/, /g' | ${SEDBINARY} 's/__space__/ /g' | ${SEDBINARY} 's/^ //' | ${SORTBINARY} -u)
+        LogText "Paths to ignore: ${IGNORE_PATHS_PRINT}"
 
         for DIR in ${sSSL_PATHS}; do
             COUNT_DIR=0
             if [ -d ${DIR} ]; then
                 FileIsReadable ${DIR}
                 if [ ${CANREAD} -eq 1 ]; then
+                    LASTSUBDIR=""
                     LogText "Result: found directory ${DIR}"
-                    # Search for CRT files
-                    sFINDCRTS=$(${FINDBINARY} ${DIR} -name "*.crt" -type f -print 2> /dev/null)
-                    if [ ! -z "${sFINDCRTS}" ]; then
-                        for FILE in ${sFINDCRTS}; do
-                            FileIsReadable ${FILE}
+                    # Search for certificate files
+                    FILES=$(${FINDBINARY} ${DIR} -type f 2> /dev/null | ${EGREPBINARY} ".crt$|.pem$|^cert" | ${SORTBINARY} | ${SEDBINARY} 's/ /__space__/g')
+                    for FILE in ${FILES}; do
+                        FILE=$(echo ${FILE} | ${SEDBINARY} 's/__space__/ /g')
+                        # See if we need to skip this path
+                        SUBDIR=$(echo ${FILE} | ${AWKBINARY} -F/ 'sub(FS $NF,x)' | ${SEDBINARY} 's/__space__/ /g')
+                        # If we discover a new directory, do evaluation
+                        #Debug "File   : ${FILE}"
+                        #Debug "Lastdir: ${LASTSUBDIR}"
+                        #Debug "Curdir : ${SUBDIR}"
+                        if [ ! "${SUBDIR}" = "${LASTSUBDIR}" ]; then
+                            SKIP=0
+                            # Now check if this path is on the to-be-ignored list
+                            for D in ${SSL_CERTIFICATE_PATHS_TO_IGNORE}; do
+                                if Equals "${D}" "${SUBDIR}"; then
+                                    SKIP=1
+                                    LogText "Result: skipping directory (${SUBDIR}) as it is on ignore list"
+                                fi
+                            done
+                        fi
+                        if [ ${SKIP} -eq 0 ]; then
+                            #Debug "Testing ${FILE} in path: $SUBDIR"
+                            COUNT_DIR=$((COUNT_DIR + 1))
+                            FileIsReadable "${FILE}"
                             if [ ${CANREAD} -eq 1 ]; then
-                                COUNT_DIR=$((COUNT_DIR + 1))
-                                LogText "Test: checking certificate ${FILE}"
-                                # Check certificate where 'end date' has been expired
-                                EXIT_CODE=$(${OPENSSLBINARY} x509 -noout -checkend 0 -in ${FILE} -enddate > /dev/null ; echo $?)
-                                CERT_CN=$(${OPENSSLBINARY} x509 -noout -subject -in ${FILE} 2> /dev/null | ${SEDBINARY} -e 's/^subject.*CN=\([a-zA-Z0-9\.\-\*]*\).*$/\1/')
-                                CERT_NOTAFTER=$(${OPENSSLBINARY} x509 -noout -enddate -in ${FILE} 2> /dev/null | ${AWKBINARY} -F= '{if ($1=="notAfter") { print $2 }}')
-                                Report "certificate[]=${FILE}|${EXIT_CODE}|cn:${CERT_CN};notafter:${CERT_NOTAFTER};|"
-                                if [ "${EXIT_CODE}" = "0" ]; then
-                                    LogText "Result: certificate ${FILE} seems to be correct and still valid"
-                                else
-                                    FOUNDPROBLEM=1
-                                    LogText "Result: certificate ${FILE} has been expired"
+                                # Only check the files that are not installed by a package
+                                if ! FileInstalledByPackage "${FILE}"; then
+                                    OUTPUT=$(${GREPBINARY} -q 'BEGIN CERT' "${FILE}")
+                                    if [ $? -eq 0 ]; then
+                                        LogText "Result: file is a certificate file"
+                                        FIND=$(${OPENSSLBINARY} x509 -noout -in "${FILE}" -enddate 2> /dev/null | ${GREPBINARY} "^notAfter")
+                                        if [ $? -eq 0 ]; then
+                                            # Check certificate where 'end date' has been expired
+                                            FIND=$(${OPENSSLBINARY} x509 -noout -checkend 0 -in "${FILE}" -enddate 2> /dev/null)
+                                            EXIT_CODE=$?
+                                            CERT_CN=$(${OPENSSLBINARY} x509 -noout -subject -in "${FILE}" 2> /dev/null | ${SEDBINARY} -e 's/^subject.*CN=\([a-zA-Z0-9\.\-\*]*\).*$/\1/')
+                                            CERT_NOTAFTER=$(${OPENSSLBINARY} x509 -noout -enddate -in "${FILE}" 2> /dev/null | ${AWKBINARY} -F= '{if ($1=="notAfter") { print $2 }}')
+                                            Report "certificate[]=${FILE}|${EXIT_CODE}|cn:${CERT_CN};notafter:${CERT_NOTAFTER};|"
+                                            if [ ${EXIT_CODE} -eq 0 ]; then 
+                                                LogText "Result: certificate ${FILE} seems to be correct and still valid"
+                                            else
+                                                FOUNDPROBLEM=1
+                                                COUNT_EXPIRED=$((COUNT_EXPIRED + 1))
+                                                LogText "Result: certificate ${FILE} has been expired"
+                                            fi
+                                        else
+                                            LogText "Result: skipping tests for this file (${FILE}) as it is most likely not a certificate (is it a key file?)"
+                                        fi
+                                    else
+                                        LogText "Result: skipping test for this file (${FILE}) as we could not find 'BEGIN CERT'"
+                                    fi
                                 fi
                             else
                                 LogText "Result: can not read file ${FILE} (no permission)"
                             fi
-                        done
-                    else
-                        LogText "Result: no certificates found in directory ${DIR}"
-                    fi
+                        fi
+                        LASTSUBDIR="${SUBDIR}"
+                    done
+                    COUNT_TOTAL=$((COUNT_TOTAL + COUNT_DIR))
+                    LogText "Result: found ${COUNT_DIR} certificates in ${DIR}"
                 else
                     LogText "Result: can not read path ${DIR} (no permission)"
                 fi
             else
                 LogText "Result: SSL path ${DIR} does not exist"
             fi
-            COUNT_TOTAL=$((COUNT_TOTAL + COUNT_DIR))
-            LogText "Result: found ${COUNT_DIR} certificates in ${DIR}"
         done
         Report "certificates=${COUNT_TOTAL}"
         LogText "Result: found a total of ${COUNT_TOTAL} certificates"
 
         if [ ${FOUNDPROBLEM} -eq 0 ]; then
-            Display --indent 2 --text "- Checking for expired SSL certificates" --result "${STATUS_NONE}" --color GREEN
+            Display --indent 2 --text "- Checking for expired SSL certificates [${COUNT_EXPIRED}/${COUNT_TOTAL}]" --result "${STATUS_NONE}" --color GREEN
         else
-            Display --indent 2 --text "- Checking for expired SSL certificates" --result "${STATUS_FOUND}" --color RED
-            ReportSuggestion ${TEST_NO} "Check available certificates for expiration"
+            Display --indent 2 --text "- Checking for expired SSL certificates [${COUNT_EXPIRED}/${COUNT_TOTAL}]" --result "${STATUS_FOUND}" --color RED
+            ReportSuggestion "${TEST_NO}" "Check available certificates for expiration"
+        fi
+    fi
+
+#
+#################################################################################
+#
+    # Test        : CRYP-7930
+    # Description : Determine if system uses LUKS block device encryption
+    Register --test-no CRYP-7930 --os Linux --weight L --network NO --root-only YES --category security --description "Determine if system uses LUKS block device encryption"
+    if [ ${SKIPTEST} -eq 0 ]; then
+        CRYPTTABFILE="${ROOTDIR}etc/crypttab"
+        FOUND=0
+
+        # cryptsetup only works as root
+        if [ -n "${LSBLKBINARY}" ] && [ -n "${CRYPTSETUPBINARY}" ] && [ ${FORENSICS_MODE} -eq 0 ]; then
+            for BLOCK_DEV in $(${LSBLKBINARY} --noheadings --list -o NAME 2> /dev/null | cut -d' ' -f1); do
+                if ${CRYPTSETUPBINARY} isLuks $(${FINDBINARY} /dev/ -name "${BLOCK_DEV}" 2> /dev/null) 2> /dev/null; then
+                    LogText "Result: Found LUKS encrypted block device: ${BLOCK_DEV}"
+                    Report "encryption[]=luks,block_device,${BLOCK_DEV}"
+                    FOUND=$((FOUND +1))
+                else
+                    LogText "Result: block device ${BLOCK_DEV} is not LUKS encrypted"
+                fi
+            done
+            unset BLOCK_DEV
+
+        # This will enable us to do a test for forensics or when crypsetup/lsblk are not available
+        elif [ -f ${CRYPTTABFILE} ]; then
+            LogText "Result: crypttab (${CRYPTTABFILE}) exists"
+            DATA=$(${GREPBINARY} "^[a-z]" ${CRYPTTABFILE} | ${TRBINARY} -cd '[:alnum:]_\-=,\n\t ' | ${SEDBINARY} 's/[[:blank:]]/__space__/g')
+            for LINE in ${DATA}; do
+                LINE=$(echo ${LINE} | ${SEDBINARY} 's/__space__/ /g')
+                if ContainsString "luks," "${LINE}"; then
+                    PARTITION=$(echo ${LINE} | ${AWKBINARY} '{print $1}' | ${AWKBINARY} -F_ '{print $1}')
+                    LogText "Result: Found LUKS encryption on partition ${PARTITION}"
+                    Report "encryption[]=luks,partition,${PARTITION}"
+                    FOUND=$((FOUND +1))
+                fi
+            done
+            unset DATA LINE PARTITION
+        fi
+
+        if [ ${FOUND} -gt 0 ]; then
+            Display --indent 2 --text "- Found ${FOUND} LUKS encrypted block devices." --result OK --color WHITE
+        fi
+        unset FOUND
+    fi
+#
+#################################################################################
+#
+    # Test        : CRYP-8002
+    # Description : Gather available kernel entropy
+    Register --test-no CRYP-8002 --os Linux --weight L --network NO --root-only NO --category security --description "Gather available kernel entropy"
+    if [ ${SKIPTEST} -eq 0 ]; then
+        if [ -f ${ROOTDIR}proc/sys/kernel/random/entropy_avail ]; then
+            DATA=$(${AWKBINARY} '$1 ~ /^[0-9]+$/ {print $1}' ${ROOTDIR}proc/sys/kernel/random/entropy_avail)
+            if [ -n "${DATA}" ]; then
+                LogText "Result: found kernel entropy value of ${DATA}"
+                Report "kernel_entropy=${DATA}"
+                if [ ${DATA} -gt 200 ]; then
+                    Display --indent 2 --text "- Kernel entropy is sufficient" --result "${STATUS_YES}" --color GREEN
+                else
+                    Display --indent 2 --text "- Kernel entropy is sufficient" --result "${STATUS_NO}" --color YELLOW
+                    # TODO - enable suggestion when information on website is available
+                fi
+            fi
         fi
     fi
 #
